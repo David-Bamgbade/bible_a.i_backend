@@ -1,11 +1,15 @@
 from dotenv import load_dotenv
-load_dotenv()
+import os
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
-import os
+load_dotenv()
+
+uri = os.getenv("MONGO_URI")
+client = MongoClient(uri, server_api=ServerApi('1'))
+
 private_key = os.getenv("secret_key")
 jwt_key = os.getenv("jwt_secret_key")
-mongodb_public_url = os.getenv("mongodb_url")
+
 
 from flask import Flask, request, jsonify, send_file
 from sentence_transformers import SentenceTransformer
@@ -28,12 +32,12 @@ app = Flask(__name__)
 app.config["secret_key"] = private_key
 app.config["jwt_secret_key"] = jwt_key
 # Use your Railway MongoDB URI (or any valid MongoDB connection string)
-app.config["MONGO_URI"] = mongodb_public_url
-uri = os.getenv("MONGO_URI")
-client = MongoClient(uri, server_api=ServerApi('1'))
+# app.config["MONGO_URI"] = mongodb_public_url
+# uri = os.getenv("MONGO_URI")
+# client = MongoClient(uri, server_api=ServerApi('1'))
 
 # Initialize extensions
-mongo = PyMongo(app)
+
 jwt = JWTManager(app)
 
 
@@ -117,11 +121,11 @@ def register():
     if not username or not password:
         return jsonify({"error": "Username and password required"}), 400
 
-    if mongo.db.usersDetails.find_one({"username": username}):
+    if client.db.usersDetails.find_one({"username": username}):
         return jsonify({"error": "Username already exists"}), 400
 
     hashed_password = generate_password_hash(password)
-    mongo.db.usersDetails.insert_one({
+    client.db.usersDetails.insert_one({
         "username": username,
         "password": hashed_password
     })
@@ -134,7 +138,7 @@ def login():
     username = data.get("username")
     password = data.get("password")
 
-    user = mongo.db.usersDetails.find_one({"username": username})
+    user = client.db.usersDetails.find_one({"username": username})
     if user and check_password_hash(user["password"], password):
         access_token = create_access_token(
             identity=str(user["_id"]),
