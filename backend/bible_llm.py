@@ -23,11 +23,9 @@ app = Flask(__name__)
 app.config["SECRET_KEY"] = "super-secret-key"  # Change in production!
 app.config["JWT_SECRET_KEY"] = "another-super-secret-key"  # Change in production!
 # app.config["MONGO_URI"] = "mongodb://localhost:27017/BibleLlmDb"
-app.config["MONGO_URI"] = "mongodb://127.0.0.1:27017/BibleLlmDb"
+# app.config["MONGO_URI"] = "mongodb://127.0.0.1:27017/BibleLlmDb"
+app.config["MONGO_URI"] = "mongodb://mongo:xJtNSAxMnPNrPRCOvHQuVeJIVSIIPjmp@interchange.proxy.rlwy.net:12868"
 
-
-# Uncomment and configure CORS for production
-# CORS(app, origins=["https://your-production-frontend.com"])
 
 # Initialize extensions
 mongo = PyMongo(app)
