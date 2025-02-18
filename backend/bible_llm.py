@@ -28,8 +28,8 @@ app = Flask(__name__)
 app.config["secret_key"] = private_key
 app.config["jwt_secret_key"] = jwt_key
 # Use your Railway MongoDB URI (or any valid MongoDB connection string)
-app.config["mongodb_url"] = mongodb_public_url
-uri = os.getenv("mongodb_url")
+app.config["MONGO_URI"] = mongodb_public_url
+uri = os.getenv("MONGO_URI")
 client = MongoClient(uri, server_api=ServerApi('1'))
 
 # Initialize extensions
