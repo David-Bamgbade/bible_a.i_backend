@@ -23,10 +23,10 @@ from werkzeug.security import generate_password_hash, check_password_hash
 app = Flask(__name__)
 
 # --- Configuration ---
-app.config["SECRET_KEY"] = private_key
-app.config["JWT_SECRET_KEY"] = jwt_key
+app.config["secret_key"] = private_key
+app.config["jwt_secret_key"] = jwt_key
 # Use your Railway MongoDB URI (or any valid MongoDB connection string)
-app.config["MONGO_URI"] = mongodb_public_url
+app.config["mongodb_url"] = mongodb_public_url
 
 # Initialize extensions
 mongo = PyMongo(app)
