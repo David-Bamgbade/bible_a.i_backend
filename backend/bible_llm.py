@@ -1,5 +1,7 @@
 from dotenv import load_dotenv
 load_dotenv()
+from pymongo.mongo_client import MongoClient
+from pymongo.server_api import ServerApi
 import os
 private_key = os.getenv("secret_key")
 jwt_key = os.getenv("jwt_secret_key")
@@ -27,6 +29,8 @@ app.config["secret_key"] = private_key
 app.config["jwt_secret_key"] = jwt_key
 # Use your Railway MongoDB URI (or any valid MongoDB connection string)
 app.config["mongodb_url"] = mongodb_public_url
+uri = os.getenv("mongodb_url")
+client = MongoClient(uri, server_api=ServerApi('1'))
 
 # Initialize extensions
 mongo = PyMongo(app)
