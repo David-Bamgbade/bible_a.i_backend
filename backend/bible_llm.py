@@ -1,15 +1,10 @@
 from dotenv import load_dotenv
 import os
-from pymongo.mongo_client import MongoClient
-from pymongo.server_api import ServerApi
+from pymongo import MongoClient
+
 load_dotenv()
-
-uri = os.getenv("MONGO_URI")
-client = MongoClient(uri, server_api=ServerApi('1'))
-
 private_key = os.getenv("secret_key")
 jwt_key = os.getenv("jwt_secret_key")
-
 
 from flask import Flask, request, jsonify, send_file
 from sentence_transformers import SentenceTransformer
@@ -17,29 +12,27 @@ import faiss
 import json
 from io import BytesIO
 from gtts import gTTS
-from flask_pymongo import PyMongo
 from flask_jwt_extended import (
     JWTManager, create_access_token, jwt_required,
     get_jwt_identity, verify_jwt_in_request
 )
 import datetime
-from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
+
+mongodb_public_url = os.environ.get("MONGO_URI")
+client = MongoClient(str(mongodb_public_url))
+database = client.get_database("bible_ai_users")
+collection = database.get_collection("usersDetails")
 
 app = Flask(__name__)
 
 # --- Configuration ---
 app.config["secret_key"] = private_key
 app.config["jwt_secret_key"] = jwt_key
-# Use your Railway MongoDB URI (or any valid MongoDB connection string)
-# app.config["MONGO_URI"] = mongodb_public_url
-# uri = os.getenv("MONGO_URI")
-# client = MongoClient(uri, server_api=ServerApi('1'))
+app.config["MONGO_URI"] = mongodb_public_url
 
 # Initialize extensions
-
 jwt = JWTManager(app)
-
 
 # --- Bible Data and FAISS Setup ---
 filePath = "genesis.json"
@@ -121,11 +114,11 @@ def register():
     if not username or not password:
         return jsonify({"error": "Username and password required"}), 400
 
-    if client.db.usersDetails.find_one({"username": username}):
+    if client.bible_ai_users.usersDetails.find_one({"username": username}):
         return jsonify({"error": "Username already exists"}), 400
 
     hashed_password = generate_password_hash(password)
-    client.db.usersDetails.insert_one({
+    collection.insert_one({
         "username": username,
         "password": hashed_password
     })
@@ -138,7 +131,7 @@ def login():
     username = data.get("username")
     password = data.get("password")
 
-    user = client.db.usersDetails.find_one({"username": username})
+    user = collection.find_one({"username": username})
     if user and check_password_hash(user["password"], password):
         access_token = create_access_token(
             identity=str(user["_id"]),
@@ -160,6 +153,12 @@ def protected():
     current_user = get_jwt_identity()
     return jsonify({"message": f"Hello user {current_user}, you have access!"}), 200
 
+
+try:
+    client.admin.command('ping')
+    print("Pinged your deployment. You successfully connected to MongoDB!")
+except Exception as e:
+    print(e)
 
 if __name__ == '__main__':
     port = 5000  # or use os.environ.get('PORT', 5000)
